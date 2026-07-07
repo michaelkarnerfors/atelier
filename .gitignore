@@ -1,0 +1,37 @@
+# Generated output — do not commit
+output/*.pdf
+output/*.epub
+output/*.docx
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.toc
+*.out
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+
+# Vale downloaded styles (run 'vale sync' to restore)
+# The Fiction/ subfolder is kept — it contains our custom rules.
+.vale/styles/write-good/
+.vale/styles/proselint/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Font files are committed so the project is self-contained when cloned.
+# Note: only include fonts you have the right to distribute — check the
+# licence before committing a commercial font to a repository.
+
+# Generated SMF template — created on demand by make-smf.sh
+templates/word-smf.docx

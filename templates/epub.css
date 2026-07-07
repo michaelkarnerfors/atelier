@@ -1,0 +1,148 @@
+/* ─────────────────────────────────────────────────────────────────
+   epub.css — Stylesheet for EPUB output
+   Used by Pandoc when building the .epub file.
+
+   EPUB readers vary widely in how strictly they follow CSS.
+   This stylesheet sticks to well-supported properties.
+
+   Customisation points are marked with  ▸
+   ───────────────────────────────────────────────────────────────── */
+
+
+/* ── Body ──────────────────────────────────────────────────────── */
+body {
+  font-family: serif;           /* ▸ Readers usually let users override this */
+  font-size: 1em;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ── Paragraphs ─────────────────────────────────────────────────── */
+p {
+  margin-top: 0;
+  margin-bottom: 0;
+  text-indent: 1.5em;
+  orphans: 3;
+  widows: 3;
+}
+
+/* No indent on the first paragraph after a heading or scene break */
+h1 + p,
+h2 + p,
+h3 + p,
+hr + p {
+  text-indent: 0;
+}
+
+
+/* ── Title page ─────────────────────────────────────────────────── */
+/* Pandoc generates p.author, p.date, p.subtitle, p.rights on the   */
+/* auto-created title page. Centre them and remove the body indent.  */
+p.author,
+p.date,
+p.subtitle,
+p.rights {
+  text-align: center;
+  text-indent: 0;
+  margin: 0.4em 0;
+}
+
+p.author {
+  font-size: 1.1em;
+  margin-top: 1.5em;
+}
+
+
+/* ── Chapter headings (# in Markdown) ───────────────────────────── */
+h1 {
+  font-size: 1.5em;              /* ▸ */
+  font-weight: normal;
+  font-style: italic;
+  text-align: center;
+  margin-top: 3em;
+  margin-bottom: 2em;
+  page-break-before: always;
+}
+
+h2 {
+  font-size: 1.15em;
+  font-weight: normal;
+  text-align: center;
+  margin-top: 2em;
+  margin-bottom: 1em;
+}
+
+
+/* ── Scene breaks (--- in Markdown → <hr> in EPUB) ─────────────── */
+/* ▸ Most modern EPUB readers support hr::after.
+      If you see a blank space instead of stars, the reader doesn't —
+      the horizontal line fallback below will still show. */
+hr {
+  border: none;
+  border-top: 1px solid currentColor;   /* Fallback: a thin rule */
+  text-align: center;
+  margin: 1.5em auto;
+  width: 33%;
+  overflow: visible;
+}
+
+hr::after {
+  content: "\002A\2002\002A\2002\002A"; /* * ∙ * ∙ * */
+  display: block;
+  position: relative;
+  top: -0.7em;
+  background: white;
+  width: 5em;
+  margin: 0 auto;
+}
+
+
+/* ── Block quotes ───────────────────────────────────────────────── */
+blockquote {
+  margin: 1em 2em;
+  font-style: italic;
+}
+
+blockquote p {
+  text-indent: 0;
+}
+
+
+/* ── Front matter classes ───────────────────────────────────────── */
+/* Used in 00-frontmatter.md via ::: {.copyright} and ::: {.dedication} */
+
+.copyright {
+  font-size: 0.85em;
+  margin: 2em 1em;
+}
+
+.dedication {
+  text-align: center;
+  margin-top: 30%;
+  font-style: italic;
+}
+
+.dedication p {
+  text-indent: 0;
+}
+
+/* ── Colophon ───────────────────────────────────────────────────── */
+
+.colophon {
+  text-align: center;
+  margin-top: 3em;
+  font-size: 0.9em;
+}
+
+.colophon p {
+  text-indent: 0;
+  margin: 0.5em 0;
+}
+
+.colophon img {
+  display: block;
+  margin: 1.5em auto;
+  max-width: 40%;
+}

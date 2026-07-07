@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────
+# Fiction/FilterWords.yml
+#
+# Flags "filter words" — phrases that insert the character's
+# perception between the reader and the scene.
+#
+#   Instead of:  She saw the door swing open.
+#   Try:         The door swung open.
+#
+# These are warnings, not errors. Filter words are sometimes right.
+# ─────────────────────────────────────────────────────────────────
+
+extends: existence
+message: "Filter word '%s' — consider putting the reader directly in the scene."
+level: warning
+ignorecase: true
+tokens:
+  - '(?:she|he|they|I|we) saw that'
+  - '(?:she|he|they|I|we) felt that'
+  - '(?:she|he|they|I|we) noticed that'
+  - '(?:she|he|they|I|we) realized that'
+  - '(?:she|he|they|I|we) thought that'
+  - '(?:she|he|they|I|we) heard that'
+  - '(?:she|he|they|I|we) knew that'
+  - '(?:she|he|they|I|we) could see'
+  - '(?:she|he|they|I|we) could hear'
+  - '(?:she|he|they|I|we) could feel'
+  - '(?:she|he|they|I|we) watched as'
+  - '(?:she|he|they|I|we) wondered if'
+  - '(?:she|he|they|I|we) wondered whether'

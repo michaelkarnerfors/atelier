@@ -1,0 +1,16 @@
+# ─────────────────────────────────────────────────────────────────
+# Fiction/Hedging.yml
+#
+# Flags hedging constructions that soften action unnecessarily.
+#
+#   Instead of:  He seemed to hesitate.
+#   Try:         He hesitated.
+# ─────────────────────────────────────────────────────────────────
+
+extends: existence
+message: "Hedging phrase '%s' — consider a direct verb instead."
+level: warning
+ignorecase: true
+tokens:
+  - '\bseemed to\b'
+  - '\bappeared to\b'

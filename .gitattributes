@@ -1,0 +1,23 @@
+# Normalize all text files to LF line endings — in the repository and on
+# checkout — regardless of platform or the user's global git config.
+#
+# Why: Atelier's build scripts run inside a Linux container (Docker
+# quick-launch bind-mounts the host checkout straight into /studio). If a
+# Windows checkout converts them to CRLF, the container fails on them with
+# "bad interpreter: .../bash^M". This setting overrides core.autocrlf so
+# every checkout — lean install, Docker, GitHub Codespaces — gets the same
+# LF files, and `git status` stays clean across all of them.
+* text=auto eol=lf
+
+# Binary files — never subject to any line-ending conversion.
+# (.eps is deliberately left off this list: this project's cover/QR EPS
+# files are plain ASCII PostScript, not a binary preview format, so they
+# normalize safely as text like everything else.)
+*.docx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ttf  binary
+*.otf  binary
+*.ico  binary

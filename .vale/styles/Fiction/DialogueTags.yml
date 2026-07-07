@@ -1,0 +1,15 @@
+# ─────────────────────────────────────────────────────────────────
+# Fiction/DialogueTags.yml
+#
+# Flags adverbs attached to dialogue tags.
+#
+#   Instead of:  "Come in," she said softly.
+#   Try:         "Come in." She set down her cup.
+# ─────────────────────────────────────────────────────────────────
+
+extends: existence
+message: "Adverb on dialogue tag '%s' — let the dialogue carry the weight."
+level: warning
+ignorecase: true
+tokens:
+  - '\b(?:said|whispered|muttered|replied|asked|answered|called|cried|shouted|exclaimed|murmured|growled|snapped|breathed|hissed|sighed)\s+(?:softly|quietly|loudly|angrily|sadly|happily|nervously|quickly|slowly|firmly|gently|harshly|coldly|warmly|sharply|breathlessly|desperately|urgently|anxiously|cheerfully|bitterly|sweetly|hesitantly|boldly|bluntly|casually|darkly|drily|dryly|eagerly|flatly|grimly|hastily|hoarsely|icily|impatiently|innocently|ironically|knowingly|meekly|mournfully|passionately|politely|proudly|roughly|rudely|shyly|tensely|weakly|wearily|wryly)\b'

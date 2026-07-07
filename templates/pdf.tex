@@ -1,0 +1,199 @@
+%% pdf.tex — Pandoc LaTeX template for fiction
+%% ─────────────────────────────────────────────────────────────────
+%% Requires: XeLaTeX + KOMA-Script (both included in MiKTeX / TeX Live)
+%%
+%% Most settings authors need live in book-settings.yaml.
+%% Lines marked ▸ are good customisation points.
+%%
+%% macOS users: this template works unchanged. Ensure MacTeX is installed.
+%% Linux users: requires TeX Live and the fonts-texgyre package.
+%% ─────────────────────────────────────────────────────────────────
+
+\documentclass[
+  $if(fontsize)$$fontsize$$else$11pt$endif$,
+  $for(classoption)$$classoption$$sep$,$endfor$
+]{$if(documentclass)$$documentclass$$else$scrbook$endif$}
+
+%% ── Encoding & language ──────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage[$if(babel-lang)$$babel-lang$$else$english$endif$]{babel}
+%% ▸ Set babel-lang in book-settings.yaml to match your writing language.
+%%   Babel uses language names, not codes: english, ngerman, french, swedish, spanish …
+%%   Full list: https://mirrors.ctan.org/macros/latex/required/babel/base/babel.pdf
+
+%% ── Main font ────────────────────────────────────────────────────
+%% ▸ Set mainfont in book-settings.yaml (e.g.  mainfont: "Latin Modern Roman")
+%%   Any font installed on your system works.
+%%   Default: Latin Modern Roman — included in all TeX installations.
+$if(mainfont)$
+\setmainfont[Ligatures=TeX$if(mainfontoptions)$,$for(mainfontoptions)$$mainfontoptions$$sep$,$endfor$$endif$]{$mainfont$}
+$else$
+\setmainfont[Ligatures=TeX]{Latin Modern Roman}
+$endif$
+
+%% ── Page geometry ────────────────────────────────────────────────
+%% Paper size is set in book-settings.yaml (paperwidth / paperheight).
+\usepackage{geometry}
+\geometry{
+  $if(paperwidth)$paperwidth=$paperwidth$,$endif$
+  $if(paperheight)$paperheight=$paperheight$,$endif$
+  $if(margin-inner)$inner=$margin-inner$$else$inner=25mm$endif$,
+  $if(margin-outer)$outer=$margin-outer$$else$outer=19mm$endif$,
+  $if(margin-top)$top=$margin-top$$else$top=22mm$endif$,
+  $if(margin-bottom)$bottom=$margin-bottom$$else$bottom=22mm$endif$,
+  includehead,
+  headheight=14pt
+}
+
+%% ── Typography ───────────────────────────────────────────────────
+\usepackage[final]{microtype}       % Subtle improvements to line breaking
+
+$if(linestretch)$
+\usepackage{setspace}
+\setstretch{$linestretch$}
+$endif$
+
+%% ── Paragraph style ──────────────────────────────────────────────
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0pt}
+
+%% ── Widow and orphan control ─────────────────────────────────────
+\widowpenalty=10000
+\clubpenalty=10000
+\raggedbottom
+
+%% ── Running headers ──────────────────────────────────────────────
+\usepackage{scrlayer-scrpage}
+\clearpairofpagestyles
+\ofoot[\pagemark]{\pagemark}            % Page number, outer edge
+\ihead{\small\textit{\headmark}}        % Chapter title, inner edge
+\automark[chapter]{chapter}
+\pagestyle{scrheadings}
+
+%% ── Chapter headings ─────────────────────────────────────────────
+%% ▸ Adjust spacing and appearance here
+\RedeclareSectionCommand[
+  beforeskip = 6\baselineskip,
+  afterskip  = 3\baselineskip
+]{chapter}
+\setkomafont{chapter}{\normalfont\LARGE}
+\renewcommand*{\raggedchapter}{\centering}
+\renewcommand*{\chapterformat}{}        % ▸ Remove this line to restore "Chapter N" labels
+
+%% ── Scene breaks ─────────────────────────────────────────────────
+%% In your manuscript, use  ---  on its own line for a scene break.
+%% Pandoc converts --- to \begin{center}\rule{...}{...}\end{center}.
+%% We intercept \rule inside a center environment to produce * * *.
+%%
+%% ▸ To use a plain horizontal rule instead, remove the four lines below.
+\usepackage{etoolbox}
+\newcommand{\sceneruleinner}[2]{$if(scene-break)$$scene-break$$else$*\enspace *\enspace *$endif$}
+\AtBeginEnvironment{center}{\let\rule\sceneruleinner}
+
+%% ── Block quotes ─────────────────────────────────────────────────
+%% ▸ Adjust margins for indented quotations
+\renewenvironment{quote}
+  {\list{}{\leftmargin=2em\rightmargin=2em}\item\relax\itshape}
+  {\endlist}
+
+%% ── Graphics ─────────────────────────────────────────────────────
+%% graphicx: image support throughout the manuscript body.
+%% eso-pic: full-bleed cover and back cover pages.
+\usepackage{graphicx}
+\usepackage{eso-pic}   %% Used for full-bleed cover and back cover pages
+
+%% \pandocbounded — required by Pandoc 3.x for image size-clamping.
+%% Scales an image down if it exceeds the line width; otherwise unchanged.
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand{\pandocbounded}[1]{%
+  \sbox\pandoc@box{#1}%
+  \ifdim\wd\pandoc@box>\linewidth
+    \resizebox{\linewidth}{!}{\usebox\pandoc@box}%
+  \else
+    \usebox\pandoc@box%
+  \fi%
+}
+%% Default figure placement: here, top, bottom, or separate page.
+\def\fps@figure{htbp}
+\makeatother
+
+%% ── Hyperlinks (PDF metadata) ────────────────────────────────────
+\usepackage[
+  hidelinks,
+  pdfauthor={$if(author)$$author$$endif$},
+  pdftitle={$if(title)$$title$$endif$}
+]{hyperref}
+
+%% ── User header-includes from book-settings.yaml ─────────────────
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+%% ─────────────────────────────────────────────────────────────────
+\begin{document}
+
+%% ── Cover image page (optional) ─────────────────────────────────
+%% Set  cover-image: graphics/cover/placeholder-front.png  in
+%% book-settings.yaml to activate. Use PNG or JPG; SVG is not supported.
+%% Note: for commercial print (KDP, IngramSpark), submit the cover as a
+%% separate file — the interior PDF typically starts with chapter one.
+$if(cover-image)$
+\begin{titlepage}
+  \thispagestyle{empty}
+  \AddToShipoutPictureBG*{%
+    \AtPageLowerLeft{%
+      \includegraphics[width=\paperwidth,height=\paperheight]{$cover-image$}%
+    }%
+  }
+  \phantom{x}
+\end{titlepage}
+$endif$
+
+%% ── Title page ───────────────────────────────────────────────────
+\begin{titlepage}
+  \centering\null\vfill
+  {\fontsize{28}{34}\selectfont\textit{$if(title)$$title$$endif$}\par}
+  $if(subtitle)$
+  \vspace{1em}{\Large $subtitle$\par}
+  $endif$
+  \vspace{2em}
+  {\large $if(author)$$author$$endif$\par}
+  \vfill\vfill
+  $if(publisher)${\normalsize $publisher$\par}\vspace{0.5em}$endif$
+  {\normalsize $if(date)$$date$$endif$\par}
+  \vfill
+\end{titlepage}
+
+%% Front matter: roman page numbers, unnumbered chapters
+\frontmatter
+
+$for(include-before)$
+$include-before$
+$endfor$
+
+%% The manuscript files handle the \mainmatter and \backmatter
+%% transitions via raw LaTeX lines in the .md files.
+$body$
+
+$for(include-after)$
+$include-after$
+$endfor$
+
+%% ── Back cover page (optional) ───────────────────────────────────
+%% Set  back-cover-image: graphics/cover/placeholder-back.png  in
+%% book-settings.yaml to activate.
+$if(back-cover-image)$
+\clearpage
+\begin{titlepage}
+  \thispagestyle{empty}
+  \AddToShipoutPictureBG*{%
+    \AtPageLowerLeft{%
+      \includegraphics[width=\paperwidth,height=\paperheight]{$back-cover-image$}%
+    }%
+  }
+  \phantom{x}
+\end{titlepage}
+$endif$
+
+\end{document}

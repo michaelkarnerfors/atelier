@@ -1,0 +1,95 @@
+---
+# ─────────────────────────────────────────────────────────────────
+# book-settings.yaml — Your book's details and output settings
+# Fill in your own information before building.
+# ─────────────────────────────────────────────────────────────────
+
+# ── About your book ──────────────────────────────────────────────
+title:      "The Muse Engine"
+# subtitle: ""                  # Uncomment and fill in if needed
+author:     "A. N. Author"
+date:       "2026"
+lang:       "en-GB"             # Language code: en-GB, en-US, sv, fr, de …
+babel-lang: "english"           # Babel language name for PDF typesetting.
+                                # Must match lang above, but uses full names:
+                                # english, swedish, french, ngerman, spanish …
+# rights:   ""                  # Copyright line — leave blank; put it in 00-frontmatter.md instead
+# publisher: ""                 # Uncomment and fill in if needed
+
+# ── Output filename ───────────────────────────────────────────────
+# Controls how output files are named.
+# The title is always slugified (lowercased, spaces to hyphens).
+# "branch" means the current Git branch name, if your project is in a Git repository.
+
+# Options:
+#
+#   title              my-novel.pdf                  (default)
+#   title-time         my-novel-20260604-1423.pdf
+#   title-branch       my-novel-main.pdf
+#   title-branch-time  my-novel-main-20260604-1423.pdf
+#
+output-name: title
+
+# ── Standard Manuscript Format ───────────────────────────────────
+# These are used only when outputting in Standard Manuscript Format (SMF).
+author-surname: YOUR SURNAME
+short-title: YOUR SHORT TITLE
+
+# ── PDF: page size ───────────────────────────────────────────────
+# Standard trade paperback is 6 × 9 inches.
+# Other common sizes:
+#   5.5in / 8.5in   (digest / B-format)
+#   148mm / 210mm   (A5)
+#   210mm / 297mm   (A4)
+paperwidth:  "6in"
+paperheight: "9in"
+
+# ── PDF: margins ─────────────────────────────────────────────────
+# Defaults suit most 6 × 9 trade paperbacks.
+# Adjust if your print service specifies minimum margins,
+# or if you change paper size significantly.
+# inner = binding edge (larger to allow for spine)
+# outer = open edge
+margin-inner:  "25mm"
+margin-outer:  "19mm"
+margin-top:    "22mm"
+margin-bottom: "22mm"
+
+# ── Cover image ──────────────────────────────────────────────────
+# Used as the EPUB cover and as a full-page image in the PDF.
+# Use PNG or JPG. For print quality, 300 dpi is recommended.
+# Placeholder files are provided in graphics/cover/ to get you started.
+#
+cover-image:      graphics/cover/placeholder-front.png
+back-cover-image: graphics/cover/placeholder-back.png
+
+# ── PDF: layout overrides ────────────────────────────────────────
+pdf-engine:    xelatex
+documentclass: scrbook
+classoption:
+  - oneside             # Single-sided: no blank pages between chapters.
+                        # Change to twoside + openright for final print:
+                        #   - twoside    (mirrors margins for bound books)
+                        #   - openright  (chapters start on right-hand pages)
+
+# ── PDF: typography overrides ────────────────────────────────────────────
+
+# These override the default font, font size, line spacing and scene breaks
+# of your PDF template. If you have a custom template, the template can
+# possibly ignore them. In that case, edit the template directly or ask your
+# template designer to do so.
+
+# fontsize:    "11pt"
+# mainfont:    "Latin Modern Roman"
+# linestretch: 1.2       # Line spacing, 1.0 = single, 1.5 = one-and-a-half
+# scene-break: "* * *"   # Line printed between scenes in the PDF
+
+
+# ── Template overrides ────────────────────────────────────────────────────
+
+# These override the default templates.
+# Use if someone has provided you with custom PDF, EPUB, and/or Word templates.
+
+# pdf-template:  templates/pdf.tex
+# epub-template: templates/epub.css
+# word-template: templates/word.docx

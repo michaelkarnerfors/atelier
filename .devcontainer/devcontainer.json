@@ -1,0 +1,48 @@
+{
+  "name": "Atelier",
+
+  // Pull the published Atelier image rather than building from the local Dockerfile.
+  // The image is published to GitHub Container Registry on every commit to main.
+  // To use a locally-built image instead:
+  //   docker build -t ghcr.io/michaelkarnerfors/atelier:latest .
+  "image": "ghcr.io/michaelkarnerfors/atelier:latest",
+
+  // Mount the project root to /studio, matching the build scripts.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/studio,type=bind",
+  "workspaceFolder": "/studio",
+
+  // Install all recommended extensions inside the container automatically.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "vale.valeCLI.path": "/usr/local/bin/vale",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "args": ["-i"]
+          }
+        },
+        // LaTeX Workshop: syntax highlighting only — builds are handled by atelier
+        "latex-workshop.latex.autoBuild.run": "never",
+        "latex-workshop.latex.autoClean.run": "never"
+      },
+      "extensions": [
+        "yzhang.markdown-all-in-one",
+        "streetsidesoftware.code-spell-checker",
+        "ChrisChinchilla.vale-vscode",
+        "james-yu.latex-workshop",
+        "github.vscode-pull-request-github"
+      ]
+    }
+  },
+
+  // After the container starts:
+  // 1. Download Vale style packages.
+  // 2. Replace the vale-ls binary bundled with the VS Code extension with the
+  //    version compiled into the image. The extension always runs its own
+  //    bundled copy; VS Code installs a glibc build which won't run on Alpine
+  //    (musl), so we overwrite it with the musl binary from /usr/local/bin.
+  "postCreateCommand": "vale sync && find /root/.vscode-server/extensions -name 'vale-ls' -exec cp /usr/local/bin/vale-ls {} \\;",
+  "postAttachCommand": "code README.md"
+}

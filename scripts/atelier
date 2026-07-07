@@ -1,0 +1,392 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────
+# atelier — Build command for the Atelier writing studio
+#
+# Usage:  atelier [all|pdf|epub|docx|smf|clean|lint]
+#
+# Runs in the integrated terminal (Docker or Git Bash on Windows;
+# natively on macOS and Linux).
+# ─────────────────────────────────────────────────────────────────
+
+set -e  # Stop immediately if any command fails
+
+# ── Locations ─────────────────────────────────────────────────────
+# Where atelier itself lives (the Atelier installation directory).
+ATELIER_SCRIPT="$(realpath "$0" 2>/dev/null || readlink -f "$0" 2>/dev/null || echo "$0")"
+ATELIER_HOME="$(cd "$(dirname "$ATELIER_SCRIPT")/.." && pwd)"
+
+# Save the directory the user called us from (before we cd to project root).
+ORIGINAL_PWD="$PWD"
+
+# ── Configuration ─────────────────────────────────────────────────
+METADATA="book-settings.yaml"
+LATEX_TEMPLATE="templates/pdf.tex"
+EPUB_CSS="templates/epub.css"
+DOCX_REFERENCE="templates/word.docx"
+OUTPUT_DIR="output"
+
+# ── Template overrides from book-settings.yaml ────────────────────
+# Reads a plain string value from a flat YAML file.
+yaml_get() {
+  grep "^${1}:" "$2" 2>/dev/null | head -1 \
+    | sed "s/^${1}:[[:space:]]*//" \
+    | sed "s/[\"']//g" \
+    | sed 's/[[:space:]]*$//'
+}
+
+_val=$(yaml_get "pdf-template" "$METADATA"); [ -n "$_val" ] && LATEX_TEMPLATE="$_val"
+_val=$(yaml_get "epub-template"       "$METADATA"); [ -n "$_val" ] && EPUB_CSS="$_val"
+_val=$(yaml_get "word-template" "$METADATA"); [ -n "$_val" ] && DOCX_REFERENCE="$_val"
+
+# ── Output filename ───────────────────────────────────────────────
+# Derives the base output filename from the title and output-name setting.
+# Options: title | title-time | title-branch | title-branch-time
+make_output_name() {
+  local mode; mode=$(yaml_get "output-name" "$METADATA")
+  local title; title=$(yaml_get "title" "$METADATA")
+
+  # Slugify: lowercase, strip non-alphanumeric, collapse hyphens
+  local slug; slug=$(echo "$title" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed 's/[^a-z0-9 ]//g' \
+    | tr ' ' '-' \
+    | sed 's/--*/-/g; s/^-//; s/-$//')
+
+  [ -z "$slug" ] && slug="book"
+
+  case "${mode:-title}" in
+    title)             echo "$slug" ;;
+    title-time)        echo "${slug}-$(date +%Y%m%d-%H%M)" ;;
+    title-branch)      echo "${slug}-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)" ;;
+    title-branch-time) echo "${slug}-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)-$(date +%Y%m%d-%H%M)" ;;
+    *)                 echo "$slug" ;;
+  esac
+}
+
+OUTPUT_NAME=$(make_output_name)
+
+# ── Manuscript source files ───────────────────────────────────────
+# Default: all .md files in manuscript/, sorted alphabetically.
+# Prefix filenames with numbers to control order: 00-, 01-, 02-, …
+#
+# To use an explicit file list instead (for subdirectories or custom
+# ordering), create manuscript/toc.txt — the build detects it automatically.
+# See documentation/TABLE-OF-CONTENTS.md for instructions.
+#
+# SOURCES is a bash array so filenames with spaces are handled correctly.
+if [ -f "manuscript/toc.txt" ]; then
+  readarray -t SOURCES < <(sed '/^[[:space:]]*#/d; /^[[:space:]]*$/d; s|^|manuscript/|' manuscript/toc.txt)
+else
+  readarray -t SOURCES < <(find manuscript -maxdepth 2 -name "*.md" 2>/dev/null | sort)
+fi
+
+# ── Helpers ───────────────────────────────────────────────────────
+
+# Walk up from the current directory until book-settings.yaml is found.
+# This lets atelier be called from any subdirectory of a project.
+find_project_root() {
+  local dir="$PWD"
+  while [ "$dir" != "/" ]; do
+    [ -f "$dir/book-settings.yaml" ] && echo "$dir" && return 0
+    dir="$(dirname "$dir")"
+  done
+  echo "ERROR: not inside an Atelier project (no book-settings.yaml found)." >&2
+  return 1
+}
+
+# Create a new lean book project from a slug.
+# Copies only the content a book needs — no Atelier tooling, no scripts.
+# Plants a .devcontainer/devcontainer.json so the book opens in the
+# Atelier container automatically when opened in VS Code.
+new_book() {
+  local slug="$1"
+  if [ -z "$slug" ]; then
+    echo "Usage: atelier new-book <book-slug>"
+    echo "Example: atelier new-book my-fantasy-novel"
+    exit 1
+  fi
+
+  # Convert slug to title: my-fantasy-novel → My Fantasy Novel
+  local title
+  title=$(echo "$slug" | tr '-' ' ' \
+    | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
+
+  local target="${ORIGINAL_PWD}/${slug}"
+
+  if [ -d "$target" ]; then
+    echo "ERROR: '${target}' already exists."
+    exit 1
+  fi
+
+  echo "→ Creating new book: ${title}"
+
+  # ── Book content ───────────────────────────────────────────────
+  mkdir -p "${target}/output"
+  cp -r "${ATELIER_HOME}/manuscript"  "${target}/"
+  cp -r "${ATELIER_HOME}/graphics"    "${target}/"
+  cp -r "${ATELIER_HOME}/templates"   "${target}/"
+  cp -r "${ATELIER_HOME}/bible"       "${target}/"
+  cp -r "${ATELIER_HOME}/scratchpad"  "${target}/"
+  cp    "${ATELIER_HOME}/book-settings.yaml" "${target}/"
+  cp    "${ATELIER_HOME}/.vale.ini"   "${target}/"
+  cp    "${ATELIER_HOME}/.gitignore"  "${target}/"
+  [ -d "${ATELIER_HOME}/.vale" ] && cp -r "${ATELIER_HOME}/.vale" "${target}/"
+  [ -d "${ATELIER_HOME}/.vscode" ] && cp -r "${ATELIER_HOME}/.vscode" "${target}/"
+  [ -d "${ATELIER_HOME}/.devcontainer" ] && cp -r "${ATELIER_HOME}/.devcontainer" "${target}/"
+
+  # ── Per-book VS Code tasks ─────────────────────────────────────
+  # Overwrite the copied tasks.json with a per-book version that:
+  #   - Opens README.md as the welcome page
+  #   - Shows the first-time / returning terminal banner
+  #   - Drops to an interactive bash shell
+  # On Windows/macOS (outside the container) it exits immediately.
+  cat > "${target}/.vscode/tasks.json" << TASKS
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Atelier: ${title}",
+      "type": "shell",
+      "command": "exit 0",
+      "linux": {
+        "command": "source /etc/docker-bashrc.sh; code README.md; exec bash -i;"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "echo": false,
+        "close": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
+TASKS
+  cp "${ATELIER_HOME}/documentation/HELP.md" "${target}/README.md"
+
+
+  # ── Stamp title into book-settings.yaml ────────────────────────
+  sed -i "s/^title:.*$/title:      \"${title}\"/" "${target}/book-settings.yaml"
+  sed -i "s/^author:.*$/author:     \"A. N. Author\"/" "${target}/book-settings.yaml"
+
+  # ── Fresh git repository ───────────────────────────────────────
+  # Initialise and stage everything — the author makes the first commit
+  # once their git identity is configured.
+  cd "${target}"
+  git init -q
+  git add .
+
+
+  echo ""
+  echo "  ✓  ${target}"
+  echo ""
+  echo "  Open the folder in VS Code to start writing:"
+  echo "     code \"${target}\""
+}
+
+require() {
+  if ! command -v "$1" &>/dev/null; then
+    echo "ERROR: '$1' not found. See README.md for installation instructions."
+    exit 1
+  fi
+}
+
+verify_project_structure() {
+  if [ ! -d "manuscript" ]; then
+    echo "ERROR: no manuscript/ folder found in '$PWD'. Is this an Atelier project?"
+    exit 1
+  fi
+  if [ ! -d "templates" ]; then
+    echo "ERROR: no templates/ folder found in '$PWD'. Is this an Atelier project?"
+    exit 1
+  fi
+}
+
+show_help() {
+  cat << 'EOF'
+
+  Usage:  atelier <command> [file ...]
+
+  Build commands:
+    all      Build PDF, EPUB and DOCX  (default)
+    pdf      Build PDF only
+    epub     Build EPUB only
+    docx     Build DOCX (standard Word format)
+    smf      Build DOCX (Standard Manuscript Format)
+    clean    Delete all built outputs
+
+  Other commands:
+    lint     Check prose with Vale
+    new-book Create a new book project folder
+    help     Show this help
+
+  To build a single file instead of the full manuscript:
+    atelier pdf manuscript/01-chapter-one.md
+
+  Vale (prose linter):
+    vale sync          Download / update style packages
+    vale manuscript/   Lint the full manuscript folder
+
+EOF
+}
+
+# Returns a sorted list of media-* folders that currently exist.
+media_snapshot() {
+  find . -maxdepth 1 -name 'media-*' -type d 2>/dev/null | sort
+}
+
+# Removes media-* folders that did not exist at snapshot time.
+media_cleanup() {
+  local before="$1"
+  find . -maxdepth 1 -name 'media-*' -type d 2>/dev/null | sort | \
+  while IFS= read -r folder; do
+    if ! echo "$before" | grep -qF "$folder"; then
+      rm -rf "$folder"
+    fi
+  done
+}
+
+# ── Build targets ─────────────────────────────────────────────────
+build_pdf() {
+  require pandoc
+  echo "→ Building PDF …"
+  if [ -d templates/fonts ] && [ "$(ls -A templates/fonts 2>/dev/null)" ]; then
+    mkdir -p ~/.fonts
+    cp -n templates/fonts/* ~/.fonts/ 2>/dev/null || true
+    fc-cache -f -q 2>/dev/null || true
+  fi
+  local snap; snap=$(media_snapshot)
+  pandoc "${SOURCES[@]}" \
+    --lua-filter="${ATELIER_HOME}/scripts/inject-metadata.lua" \
+    --metadata-file="$METADATA" \
+    --template="$LATEX_TEMPLATE" \
+    --pdf-engine=xelatex \
+    --output="$OUTPUT_DIR/$OUTPUT_NAME.pdf"
+  media_cleanup "$snap"
+  echo "  ✓  $OUTPUT_DIR/$OUTPUT_NAME.pdf"
+}
+
+build_epub() {
+  require pandoc
+  echo "→ Building EPUB …"
+  local snap; snap=$(media_snapshot)
+  pandoc "${SOURCES[@]}" \
+    --lua-filter="${ATELIER_HOME}/scripts/inject-metadata.lua" \
+    --metadata-file="$METADATA" \
+    --css="$EPUB_CSS" \
+    --split-level=1 \
+    --output="$OUTPUT_DIR/$OUTPUT_NAME.epub"
+  media_cleanup "$snap"
+  echo "  ✓  $OUTPUT_DIR/$OUTPUT_NAME.epub"
+}
+
+build_docx() {
+  require pandoc
+  echo "→ Building DOCX …"
+  local snap; snap=$(media_snapshot)
+  pandoc "${SOURCES[@]}" \
+    --lua-filter="${ATELIER_HOME}/scripts/inject-metadata.lua" \
+    --metadata-file="$METADATA" \
+    --reference-doc="$DOCX_REFERENCE" \
+    --output="$OUTPUT_DIR/$OUTPUT_NAME.docx"
+  media_cleanup "$snap"
+  echo "  ✓  $OUTPUT_DIR/$OUTPUT_NAME.docx"
+}
+
+build_smf() {
+  require pandoc
+  if [ ! -f "templates/word-smf-base.docx" ]; then
+    echo "ERROR: templates/word-smf-base.docx not found in this project."
+    echo "This file must be present in the project's templates/ folder."
+    exit 1
+  fi
+  echo "→ Building SMF DOCX …"
+  "${ATELIER_HOME}/scripts/make-smf.sh"
+  trap '"${ATELIER_HOME}/scripts/remove-smf.sh"' EXIT
+  local snap; snap=$(media_snapshot)
+  pandoc "${SOURCES[@]}" \
+    --lua-filter="${ATELIER_HOME}/scripts/inject-metadata.lua" \
+    --metadata-file="$METADATA" \
+    --reference-doc="templates/word-smf.docx" \
+    --output="$OUTPUT_DIR/$OUTPUT_NAME-smf.docx"
+  media_cleanup "$snap"
+  trap - EXIT
+  "${ATELIER_HOME}/scripts/remove-smf.sh"
+  echo "  ✓  $OUTPUT_DIR/$OUTPUT_NAME-smf.docx"
+}
+
+clean() {
+  echo "→ Cleaning output …"
+  rm -f "$OUTPUT_DIR"/*.pdf \
+        "$OUTPUT_DIR"/*.epub \
+        "$OUTPUT_DIR"/*.docx
+  echo "  ✓  Done."
+}
+
+build_all() {
+  build_pdf
+  build_epub
+  build_docx
+  echo ""
+  echo "All outputs written to $OUTPUT_DIR/."
+}
+
+lint() {
+  require vale
+  echo "→ Linting manuscript …"
+  if [ ! -d ".vale/styles/write-good" ] || [ ! -d ".vale/styles/proselint" ]; then
+    echo "ERROR: Vale styles not found. Run 'vale sync' first."
+    exit 1
+  fi
+  vale "${SOURCES[@]}"
+  echo ""
+  echo "  ✓  Lint complete."
+}
+
+# ── Dispatch ──────────────────────────────────────────────────────
+TARGET="${1:-all}"
+shift || true
+
+# Commands that do not require a project root — handle before cd.
+if [ "$TARGET" = "new-book" ]; then new_book "$@"; exit 0; fi
+if [ "$TARGET" = "help"     ]; then show_help;      exit 0; fi
+
+# Reject unknown commands here so we never waste time searching for a root.
+case "$TARGET" in
+  all|pdf|epub|docx|smf|clean|lint) ;;
+  *)
+    echo "  Unknown command: '${TARGET}'"
+    show_help
+    exit 1
+    ;;
+esac
+
+# All other commands require a project root.
+PROJECT_ROOT=$(find_project_root) || exit 1
+cd "$PROJECT_ROOT"
+verify_project_structure
+
+# Re-evaluate SOURCES now that we are in the project root.
+if [ -f "manuscript/toc.txt" ]; then
+  readarray -t SOURCES < <(sed '/^[[:space:]]*#/d; /^[[:space:]]*$/d; s|^|manuscript/|' manuscript/toc.txt)
+else
+  readarray -t SOURCES < <(find manuscript -maxdepth 2 -name "*.md" 2>/dev/null | sort)
+fi
+
+if [ $# -gt 0 ]; then
+  SOURCES=("$@")
+fi
+
+case "$TARGET" in
+  all)   build_all  ;;
+  pdf)   build_pdf  ;;
+  epub)  build_epub ;;
+  docx)  build_docx ;;
+  smf)   build_smf  ;;
+  clean) clean ;;
+  lint)  lint  ;;
+esac

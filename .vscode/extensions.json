@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    // Markdown editing
+    "yzhang.markdown-all-in-one",       // Preview, shortcuts, TOC generation
+    "streetsidesoftware.code-spell-checker", // Spell checking in prose
+
+    // Prose linting
+    "ChrisChinchilla.vale-vscode",      // Vale integration -- flags style issues as you write
+
+    // LaTeX template editing
+    "james-yu.latex-workshop",          // Syntax highlighting and tools for .tex template files
+
+    // Git and GitHub
+    "github.vscode-pull-request-github", // GitHub auth, pull requests, branch/merge workflows
+  ]
+}

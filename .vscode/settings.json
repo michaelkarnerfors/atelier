@@ -1,0 +1,69 @@
+{
+  // Use Git Bash as the default terminal on Windows.
+  // VS Code locates it automatically via the Windows Registry --
+  // no hard-coded path needed.
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "source": "Git Bash",
+      "args": ["--login", "-i"]
+    }
+  },
+
+  // Add the project's scripts/ folder to PATH so 'atelier' works as a command.
+  // Uses ${workspaceFolder} -- no hard-coded paths.
+  "terminal.integrated.env.windows": {
+    "PATH": "${env:PATH};${workspaceFolder}\\scripts"
+  },
+  "terminal.integrated.env.linux": {
+    "PATH": "${env:PATH}:${workspaceFolder}/scripts"
+  },
+  "terminal.integrated.env.osx": {
+    "PATH": "${env:PATH}:${workspaceFolder}/scripts"
+  },
+
+  // Always use Unix line endings for manuscript files.
+  "files.eol": "\n",
+
+  // Markdown preview -- serif font, book-width column, paragraph indents.
+  "markdown.styles": [".vscode/preview.css"],
+
+  // Markdown-specific editor settings for distraction-free writing.
+  // Word wrap is visual only (soft wrap) -- no newlines are inserted in the file.
+  "[markdown]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    "editor.rulers": [120],
+    "editor.lineNumbers": "on",
+    "editor.minimap.enabled": true,
+    "editor.renderWhitespace": "none",
+    "editor.quickSuggestions": {
+      "other": "off",
+      "comments": "off",
+      "strings": "off"
+    }
+  },
+
+  "workbench.editorAssociations": {
+    "README.md": "vscode.markdown.preview.editor"
+  },
+
+  "files.trimTrailingWhitespace": true,
+  "cSpell.words": [
+    "backmatter",
+    "epub",
+    "fontconfig",
+    "frontmatter",
+    "mainfont",
+    "mainmatter",
+    "oneline",
+    "Pandoc",
+    "Pantser",
+    "paperheight",
+    "paperwidth",
+    "stackexchange",
+    "TMPL",
+    "winget",
+    "xelatex"
+  ]
+}
