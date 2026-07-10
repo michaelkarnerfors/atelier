@@ -54,8 +54,13 @@ $if(linestretch)$
 $endif$
 
 %% ── Paragraph style ──────────────────────────────────────────────
+%% ▸ A touch of \parskip keeps rapid dialogue exchanges (many short,
+%%   one-line paragraphs in a row) from visually reading as a single
+%%   indented block — the indent alone doesn't read as a paragraph
+%%   marker when there's no flush-left continuation line to contrast
+%%   against. Set back to 0pt for pure indent-only classic styling.
 \setlength{\parindent}{1.5em}
-\setlength{\parskip}{0pt}
+\setlength{\parskip}{0.30\baselineskip}
 
 %% ── Widow and orphan control ─────────────────────────────────────
 \widowpenalty=10000
