@@ -34,7 +34,7 @@ RUN sed -i 's|/bin/sh$|/bin/bash|' /etc/passwd
 # TeX Live packages not included in the pandoc/latex base image.
 # Installing recommended collections avoids whack-a-mole with individual
 # missing packages across different templates.
-RUN tlmgr update --self && \
+RUN tlmgr update --self --all && \
     tlmgr install \
       koma-script \
       collection-latexrecommended \
