@@ -25,7 +25,7 @@ RUN wget -qO - \
 FROM pandoc/latex:latest
 
 # System utilities
-RUN apk add --no-cache make zip unzip fontconfig git bash gcompat
+RUN apk add --no-cache make zip unzip fontconfig git bash gcompat openssh-client
 
 # Set bash as the default shell for root so VS Code terminal opens bash
 ENV SHELL=/bin/bash
