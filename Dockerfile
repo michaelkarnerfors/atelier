@@ -48,9 +48,9 @@ RUN tlmgr update --self --all && \
     fc-cache -f
 
 # Vale prose linter and its VS Code language server — both from GitHub releases
-ARG VALE_VERSION=3.7.0
+ARG VALE_VERSION=3.19.0
 RUN wget -qO /tmp/vale.tar.gz \
-      "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+      "https://github.com/vale-cli/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
   && tar -xzf /tmp/vale.tar.gz -C /usr/local/bin vale \
   && rm /tmp/vale.tar.gz
 
