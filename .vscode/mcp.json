@@ -1,0 +1,29 @@
+{
+  // Vale MCP server — wires the Vale prose linter into any MCP-capable
+  // agent running in this workspace (VS Code Copilot, Claude Code, etc.).
+  //
+  // The server is a thin Python wrapper around the `vale` binary that is
+  // already installed in the dev container. It exposes four tools:
+  //
+  //   vale_lint_file        — lint a single manuscript file
+  //   vale_lint_manuscript  — lint the whole manuscript in one pass
+  //   vale_lint_text        — lint a raw string (no file needed)
+  //   vale_config           — show the active .vale.ini configuration
+  //
+  // Requirements (inside the container):
+  //   pip install mcp       — MCP Python SDK
+  //   vale                  — already present (see Dockerfile)
+  //
+  // The server starts automatically when VS Code opens the workspace.
+  // To test it by hand: python3 scripts/vale-mcp.py
+  "servers": {
+    "vale": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["${workspaceFolder}/scripts/vale-mcp.py"],
+      "env": {
+        "WORKSPACE_FOLDER": "${workspaceFolder}"
+      }
+    }
+  }
+}
