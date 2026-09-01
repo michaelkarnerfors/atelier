@@ -32,7 +32,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # ── Workspace root ────────────────────────────────────────────────────────────
 # When launched by VS Code the CWD is the workspace root (/studio inside the
@@ -42,7 +42,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent          # scripts/
 _DEFAULT_ROOT = _SCRIPT_DIR.parent                     # project root
 WORKSPACE = Path(os.environ.get("WORKSPACE_FOLDER", _DEFAULT_ROOT))
 
-mcp = FastMCP(
+mcp = MCPServer(
     "vale",
     instructions=(
         "Vale prose linter for the Atelier manuscript environment. "
