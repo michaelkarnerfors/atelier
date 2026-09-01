@@ -36,11 +36,33 @@ from mcp.server.mcpserver import MCPServer
 
 # ── Workspace root ────────────────────────────────────────────────────────────
 # When launched by VS Code the CWD is the workspace root (/studio inside the
-# container). Fall back to the directory two levels above this script so it
-# also works when invoked directly.
+# container). Fall back to the current project directory if the server is run
+# from a book checkout, and only then use the install directory as a last resort.
 _SCRIPT_DIR = Path(__file__).resolve().parent          # scripts/
-_DEFAULT_ROOT = _SCRIPT_DIR.parent                     # project root
-WORKSPACE = Path(os.environ.get("WORKSPACE_FOLDER", _DEFAULT_ROOT))
+_DEFAULT_ROOT = _SCRIPT_DIR.parent                     # Atelier install root
+
+
+def _detect_workspace_root() -> Path:
+    """Choose the active project root.
+
+    Prefer WORKSPACE_FOLDER when provided, then search upward from the current
+    working directory for a repo that contains both .vale.ini and manuscript/.
+    This avoids pointing Vale at the shared Atelier install directory when the
+    MCP server is launched from a project checkout.
+    """
+    if env_root := os.environ.get("WORKSPACE_FOLDER"):
+        candidate = Path(env_root).expanduser().resolve()
+        if candidate.exists():
+            return candidate
+
+    for candidate in (Path.cwd(), *Path.cwd().parents):
+        if (candidate / ".vale.ini").exists() and (candidate / "manuscript").exists():
+            return candidate.resolve()
+
+    return _DEFAULT_ROOT
+
+
+WORKSPACE = _detect_workspace_root()
 
 mcp = MCPServer(
     "vale",
