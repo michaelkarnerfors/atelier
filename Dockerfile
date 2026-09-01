@@ -1,4 +1,4 @@
-# ──────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # atelier — Docker build environment
 #
 # Base image: pandoc/latex (Alpine Linux + Pandoc + XeLaTeX)
@@ -6,7 +6,7 @@
 #
 # Build:  docker build -t atelier .
 # Usage:  docker run --rm -v "$(pwd):/studio" atelier [target]
-# ──────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 # ── vale-ls build stage ─────────────────────────────────────────────────────
 # The upstream releases are GNU/glibc binaries that won't run on Alpine (musl).
@@ -20,12 +20,13 @@ RUN wget -qO - \
     | tar -xzf - --strip-components=1 \
   && cargo build --release \
   && strip target/release/vale-ls
-# ────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 FROM pandoc/latex:latest
 
 # System utilities
-RUN apk add --no-cache make zip unzip fontconfig git bash gcompat openssh-client
+RUN apk add --no-cache make zip unzip fontconfig git bash gcompat openssh-client \
+      python3 py3-pip
 
 # Set bash as the default shell for root so VS Code terminal opens bash
 ENV SHELL=/bin/bash
@@ -56,6 +57,12 @@ RUN wget -qO /tmp/vale.tar.gz \
 
 ARG VALE_LS_VERSION=0.4.0
 COPY --from=vale-ls-builder /build/target/release/vale-ls /usr/local/bin/vale-ls
+
+# MCP Python SDK — required by scripts/vale-mcp.py so that any MCP-capable
+# agent (VS Code Copilot, Claude Code, etc.) can call Vale as an MCP tool.
+# py3-pip is installed via apk above; --break-system-packages is needed on
+# Alpine because PEP 668 treats the whole system as an externally-managed env.
+RUN pip install --quiet --break-system-packages mcp
 
 # Atelier scripts, templates, and book-template content — baked into the
 # image so 'atelier new-book' works from any directory, including lean book
